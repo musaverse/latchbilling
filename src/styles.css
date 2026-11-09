@@ -1255,14 +1255,52 @@ textarea.input {
   background: var(--mint-soft);
 }
 
-.route {
-  max-width: 560px;
-  margin: 4px 0 8px;
+.tax-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 640px;
+  margin-top: 18px;
 }
-.route svg {
+.tax-card {
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+/* Route: where the supply goes, and the tax that follows from it */
+.route-card {
+  padding: 18px 20px 16px;
+}
+.route-ends {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.route-ends > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+  font-stretch: 112%;
+  line-height: 1.25;
+}
+.route-ends > span:last-child {
+  text-align: right;
+  animation: fade-in 0.5s ease both 0.9s;
+}
+.route-ends small {
+  font-size: 11.5px;
+  font-weight: 400;
+  font-stretch: 100%;
+  color: var(--ink-3);
+}
+.route {
   display: block;
   width: 100%;
   height: auto;
+  margin: 10px 0 14px;
   overflow: visible;
 }
 .route-line {
@@ -1294,97 +1332,153 @@ textarea.input {
   fill: var(--ice);
   stroke: #4f7fa3;
 }
-.route-labels {
+.verdict {
   display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 6px;
+  align-items: center;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
 }
-.route-from,
-.route-to {
+.verdict p {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink-2);
+}
+.verdict-chip {
+  flex: none;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  font-stretch: 108%;
+  white-space: nowrap;
+  animation: pop-in 0.5s var(--ease) both 1s;
+}
+.verdict-intra {
+  background: var(--mint);
+  color: var(--deep);
+}
+.verdict-inter {
+  background: var(--ice);
+  color: var(--ice-deep);
+}
+.verdict-export {
+  background: var(--lilac);
+  color: var(--lilac-deep);
+}
+
+/* Rates: one list, each setting on its own row */
+.settings-card {
+  padding: 4px 20px;
+}
+.setting {
   display: flex;
   flex-direction: column;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.25;
+  gap: 10px;
+  padding: 16px 0;
 }
-.route-to {
-  text-align: right;
-  animation: fade-in 0.5s ease both 1s;
+.setting + .setting {
+  border-top: 1px solid var(--line);
 }
-.route small {
-  color: var(--ink-3);
-  font-weight: 300;
-  font-size: 12px;
-}
-.tax-explain strong {
-  font-weight: 500;
-  color: var(--ink);
-  background: linear-gradient(transparent 60%, var(--mint) 60%);
-}
-.tax-grid {
+.setting-head {
   display: flex;
-  flex-wrap: wrap;
-  gap: 18px 24px;
-  align-items: flex-start;
-  margin-bottom: 22px;
+  flex-direction: column;
+  gap: 1px;
 }
-.tax-grid > label.field {
-  width: 140px;
+.setting-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+.setting-hint {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--ink-3);
+}
+.setting-inline {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.setting-select {
+  width: 120px;
+  flex: none;
 }
 .segmented {
   display: inline-flex;
   padding: 3px;
   border-radius: 999px;
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.segmented-full {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  width: 100%;
 }
 .segmented button {
-  height: 34px;
-  min-width: 48px;
-  padding: 0 12px;
+  height: 36px;
+  min-width: 0;
+  padding: 0 8px;
   border: 0;
   border-radius: 999px;
   background: transparent;
   cursor: pointer;
   color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
   transition: background 0.3s var(--ease), color 0.3s;
 }
 .segmented button.on {
   background: var(--deep);
   color: var(--mint);
 }
+
+/* Totals: full-width rows, net amount set apart */
 .ledger {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px 24px;
-  margin: 0 0 22px;
-  padding: 18px 20px;
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  padding: 6px 20px 0;
+  overflow: hidden;
   font-variant-numeric: tabular-nums;
 }
-.ledger dt {
+.ledger-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 9px 0;
   color: var(--ink-2);
 }
-.ledger dd {
-  margin: 0;
-  text-align: right;
+.ledger-row > :last-child {
+  color: var(--ink);
 }
 .ledger-total {
-  padding-top: 10px;
+  margin-top: 4px;
+  padding-top: 13px;
   border-top: 1px solid var(--line);
+  color: var(--ink);
   font-weight: 500;
-  color: var(--ink) !important;
+}
+.ledger-minus > :last-child {
+  color: var(--ink-2);
 }
 .ledger-net {
-  margin-top: 4px;
-  padding: 10px 0 0;
-  border-top: 2px solid var(--deep);
-  font-size: 17px;
-  font-stretch: 112%;
-  color: var(--deep) !important;
+  margin: 8px -20px 0;
+  padding: 16px 20px;
+  background: var(--deep);
+  color: #dfe7dc;
+}
+.ledger-net > :last-child {
+  color: var(--mint);
+  font-size: 20px;
+  font-stretch: 118%;
+}
+.note-field {
+  animation: rise 0.4s var(--ease) both;
+}
+.add-note {
+  align-self: flex-start;
 }
 
 .review-total {
@@ -3004,19 +3098,44 @@ textarea.input {
     align-self: stretch;
     height: 48px;
   }
-  .tax-grid {
-    gap: 16px;
+  .tax-stack {
+    gap: 12px;
   }
-  .segmented {
-    max-width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
+  .route-card {
+    padding: 16px 16px 14px;
+  }
+  .route {
+    margin: 8px 0 12px;
+  }
+  .verdict {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .settings-card {
+    padding: 2px 16px;
+  }
+  .setting {
+    padding: 14px 0;
   }
   .segmented button {
-    height: 38px;
+    height: 40px;
   }
   .ledger {
-    padding: 16px;
+    padding: 4px 16px 0;
+  }
+  .ledger-net {
+    margin: 6px -16px 0;
+    padding: 15px 16px;
+  }
+  .ledger-net > :first-child {
+    white-space: nowrap;
+  }
+  .ledger-net > :last-child {
+    font-size: 18px;
+  }
+  .tax-stack {
+    margin-top: 12px;
   }
   .review-amount {
     font-size: 40px;

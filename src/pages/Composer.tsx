@@ -570,33 +570,20 @@ function WorkStage({
 
 /* ---------- 03 Tax ---------- */
 
-function TaxRoute({ mode, from, to, toName }: { mode: TaxMode; from: string; to: string; toName: string }) {
-  // Same state: a level line. Other state: the line climbs at 57°. Export: it leaves the frame.
+function TaxRoute({ mode }: { mode: TaxMode }) {
+  // Same state: a level line. Other state: the line climbs at 57°. Export: it runs off the edge.
   const d =
     mode === 'intra'
-      ? 'M40 80H480'
+      ? 'M14 46H506'
       : mode === 'inter'
-        ? 'M40 104H200Q216 104 225 91L262 34Q271 22 287 22H480'
-        : 'M40 104H200Q216 104 225 91L262 34Q271 22 287 22H560';
-  const endY = mode === 'intra' ? 80 : 22;
+        ? 'M14 74H214Q226 74 232 64L256 26Q262 16 274 16H506'
+        : 'M14 74H214Q226 74 232 64L256 26Q262 16 274 16H540';
   return (
-    <div className={`route route-${mode}`}>
-      <svg viewBox="0 0 520 126" aria-hidden key={mode}>
-        <path className="route-line" d={d} pathLength={1} />
-        <circle className="route-node" cx="40" cy={mode === 'intra' ? 80 : 104} r="9" />
-        {mode !== 'export' && <circle className="route-node end" cx="480" cy={endY} r="9" />}
-      </svg>
-      <div className="route-labels">
-        <span className="route-from">
-          {from}
-          <small>You</small>
-        </span>
-        <span className="route-to">
-          {to}
-          <small>{toName}</small>
-        </span>
-      </div>
-    </div>
+    <svg className={`route route-${mode}`} viewBox="0 0 520 90" aria-hidden key={mode}>
+      <path className="route-line" d={d} pathLength={1} />
+      <circle className="route-node" cx="14" cy={mode === 'intra' ? 46 : 74} r="8" />
+      {mode !== 'export' && <circle className="route-node end" cx="506" cy={mode === 'intra' ? 46 : 16} r="8" />}
+    </svg>
   );
 }
 
@@ -604,6 +591,9 @@ function Amount({ value, currency, className }: { value: number; currency: Curre
   const v = useCountUp(value, 700);
   return <span className={className}>{money(v, currency)}</span>;
 }
+
+const GST_RATES = [0, 5, 12, 18, 28];
+const TDS_RATES = [0, 1, 2, 10];
 
 function TaxStage({
   mode,
@@ -620,104 +610,142 @@ function TaxStage({
   set: (p: Partial<Invoice>) => void;
   totals: ReturnType<typeof computeTotals>;
 }) {
-  const explain: Record<TaxMode, ReactNode> = {
-    intra: (
-      <>
-        Same state, so GST splits into <strong>CGST {draft.taxRate / 2}%</strong> and <strong>SGST {draft.taxRate / 2}%</strong>.
-      </>
-    ),
-    inter: (
-      <>
-        Different states, so it's one <strong>IGST {draft.taxRate}%</strong>.
-      </>
-    ),
-    export: (
-      <>
-        Billed in {draft.currency}: an export of services, <strong>zero-rated under LUT</strong>.
-      </>
-    ),
+  const [noteOpen, setNoteOpen] = useState(!!draft.notes);
+  const verdict: Record<TaxMode, { label: string; why: ReactNode }> = {
+    intra: {
+      label: `CGST ${draft.taxRate / 2}% + SGST ${draft.taxRate / 2}%`,
+      why: 'Same state, so GST splits equally between the Centre and the State.',
+    },
+    inter: {
+      label: `IGST ${draft.taxRate}%`,
+      why: 'Different states, so it is one integrated tax at the full rate.',
+    },
+    export: {
+      label: 'Zero-rated',
+      why: <>Billed in {draft.currency}: an export of services under LUT, with no GST charged.</>,
+    },
   };
-  const toLabel = mode === 'export' ? 'Outside India' : (STATES[client?.stateCode ?? ''] ?? '—');
-  return (
-    <>
-      <TaxRoute mode={mode} from={STATES[companyState] ?? companyState} to={toLabel} toName={client?.name ?? ''} />
-      <p className="stage-lede tax-explain">{explain[mode]}</p>
+  const fromName = STATES[companyState] ?? companyState;
+  const toName = mode === 'export' ? 'Outside India' : (STATES[client?.stateCode ?? ''] ?? '—');
+  const cur = draft.currency;
 
-      <div className="tax-grid">
-        <div className="field">
-          <span className="field-label">GST rate</span>
-          <div className="segmented">
-            {[0, 5, 12, 18, 28].map((r) => (
-              <button key={r} className={draft.taxRate === r ? 'on' : ''} onClick={() => set({ taxRate: r })}>
+  return (
+    <div className="tax-stack">
+      <section className={`tax-card route-card route-card-${mode}`} aria-label="Place of supply">
+        <div className="route-ends">
+          <span>
+            <small>From · You</small>
+            {fromName}
+          </span>
+          <span>
+            <small>To · {client?.name ?? 'Client'}</small>
+            {toName}
+          </span>
+        </div>
+        <TaxRoute mode={mode} />
+        <div className="verdict">
+          <span className={`verdict-chip verdict-${mode}`}>{verdict[mode].label}</span>
+          <p>{verdict[mode].why}</p>
+        </div>
+      </section>
+
+      <section className="tax-card settings-card" aria-label="Rates">
+        <div className="setting">
+          <div className="setting-head">
+            <span className="setting-label">GST rate</span>
+            <span className="setting-hint">On the taxable value</span>
+          </div>
+          <div className="segmented segmented-full" style={{ '--n': GST_RATES.length } as CSSProperties} role="radiogroup" aria-label="GST rate">
+            {GST_RATES.map((r) => (
+              <button key={r} role="radio" aria-checked={draft.taxRate === r} className={draft.taxRate === r ? 'on' : ''} onClick={() => set({ taxRate: r })}>
                 {r}%
               </button>
             ))}
           </div>
         </div>
-        <div className="field">
-          <span className="field-label">TDS the client deducts</span>
-          <div className="segmented">
-            {[0, 1, 2, 10].map((r) => (
-              <button key={r} className={draft.tdsRate === r ? 'on' : ''} onClick={() => set({ tdsRate: r })}>
+        <div className="setting">
+          <div className="setting-head">
+            <span className="setting-label">TDS the client deducts</span>
+            <span className="setting-hint">Not printed on the invoice</span>
+          </div>
+          <div className="segmented segmented-full" style={{ '--n': TDS_RATES.length } as CSSProperties} role="radiogroup" aria-label="TDS rate">
+            {TDS_RATES.map((r) => (
+              <button key={r} role="radio" aria-checked={draft.tdsRate === r} className={draft.tdsRate === r ? 'on' : ''} onClick={() => set({ tdsRate: r })}>
                 {r}%
               </button>
             ))}
           </div>
         </div>
-        <label className="field">
-          <span className="field-label">Currency</span>
-          <select className="input" value={draft.currency} onChange={(e) => set({ currency: e.target.value as Currency })}>
+        <label className="setting setting-inline">
+          <span className="setting-head">
+            <span className="setting-label">Currency</span>
+            <span className="setting-hint">{cur === 'INR' ? 'Indian rupees' : 'Treated as an export'}</span>
+          </span>
+          <select className="input setting-select" value={cur} onChange={(e) => set({ currency: e.target.value as Currency })}>
             {CURRENCIES.map((c) => (
               <option key={c}>{c}</option>
             ))}
           </select>
         </label>
-      </div>
+      </section>
 
-      <dl className="ledger">
-        <dt>Taxable value</dt>
-        <dd>
-          <Amount value={totals.subtotal} currency={draft.currency} />
-        </dd>
+      <section className="tax-card ledger" aria-label="Totals">
+        <div className="ledger-row">
+          <span>Taxable value</span>
+          <Amount value={totals.subtotal} currency={cur} />
+        </div>
         {mode === 'intra' && (
           <>
-            <dt>CGST {draft.taxRate / 2}%</dt>
-            <dd>
-              <Amount value={totals.cgst} currency={draft.currency} />
-            </dd>
-            <dt>SGST {draft.taxRate / 2}%</dt>
-            <dd>
-              <Amount value={totals.sgst} currency={draft.currency} />
-            </dd>
+            <div className="ledger-row">
+              <span>CGST {draft.taxRate / 2}%</span>
+              <Amount value={totals.cgst} currency={cur} />
+            </div>
+            <div className="ledger-row">
+              <span>SGST {draft.taxRate / 2}%</span>
+              <Amount value={totals.sgst} currency={cur} />
+            </div>
           </>
         )}
         {mode === 'inter' && (
-          <>
-            <dt>IGST {draft.taxRate}%</dt>
-            <dd>
-              <Amount value={totals.igst} currency={draft.currency} />
-            </dd>
-          </>
+          <div className="ledger-row">
+            <span>IGST {draft.taxRate}%</span>
+            <Amount value={totals.igst} currency={cur} />
+          </div>
         )}
-        <dt className="ledger-total">Invoice amount</dt>
-        <dd className="ledger-total">
-          <Amount value={totals.total} currency={draft.currency} />
-        </dd>
-        <dt>TDS {draft.tdsRate}%</dt>
-        <dd>
-          − <Amount value={totals.tds} currency={draft.currency} />
-        </dd>
-        <dt className="ledger-net">Lands in the bank</dt>
-        <dd className="ledger-net">
-          <Amount value={totals.receivable} currency={draft.currency} />
-        </dd>
-      </dl>
+        <div className="ledger-row ledger-total">
+          <span>Invoice amount</span>
+          <Amount value={totals.total} currency={cur} />
+        </div>
+        <div className="ledger-row ledger-minus">
+          <span>TDS {draft.tdsRate}%</span>
+          <span>
+            − <Amount value={totals.tds} currency={cur} />
+          </span>
+        </div>
+        <div className="ledger-row ledger-net">
+          <span>Lands in the bank</span>
+          <Amount value={totals.receivable} currency={cur} />
+        </div>
+      </section>
 
-      <label className="field">
-        <span className="field-label">Note on invoice (optional)</span>
-        <textarea className="input" rows={2} value={draft.notes} onChange={(e) => set({ notes: e.target.value })} />
-      </label>
-    </>
+      {noteOpen ? (
+        <label className="field note-field">
+          <span className="field-label">Note on invoice</span>
+          <textarea
+            className="input"
+            rows={2}
+            value={draft.notes}
+            autoFocus={!draft.notes}
+            placeholder="Printed under the thank-you line"
+            onChange={(e) => set({ notes: e.target.value })}
+          />
+        </label>
+      ) : (
+        <button className="add-line add-note" onClick={() => setNoteOpen(true)}>
+          + Add a note to the invoice
+        </button>
+      )}
+    </div>
   );
 }
 
