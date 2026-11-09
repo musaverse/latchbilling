@@ -19,8 +19,9 @@ export function Settings() {
   return (
     <>
       <PageHeader
-        title="Settings"
-        subtitle="Company, bank and numbering details printed on every invoice."
+        intro="Settings"
+        title="The details on every paper."
+        subtitle="Company, bank and numbering details printed on each invoice."
         actions={
           <>
             {saved && <span className="saved">Saved</span>}

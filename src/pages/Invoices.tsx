@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { Empty, PageHeader, TaxBadge } from '../components/ui';
 import { exportRegister } from '../lib/exportXlsx';
 import { computeTotals, sequenceConflicts } from '../lib/gst';
@@ -33,8 +33,9 @@ export function Invoices() {
   return (
     <>
       <PageHeader
-        title="Invoice register"
-        subtitle="Every invoice with its GST and TDS, worked out automatically. Export gives the same columns as your monthly Excel."
+        intro="Register"
+        title="Every invoice, latched in order."
+        subtitle="GST and TDS are worked out for you. Export gives the same columns as your monthly Excel."
         actions={
           <>
             <button
@@ -70,7 +71,7 @@ export function Invoices() {
 
       <section className="card card-flush">
         {rows.length === 0 ? (
-          <Empty title="No invoices found" />
+          <Empty title="Nothing latched here yet." />
         ) : (
           <div className="table-wrap">
             <table className="table table-dense">
@@ -89,8 +90,13 @@ export function Invoices() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map(({ inv, client, t, outOfOrder }) => (
-                  <tr key={inv.id} className="clickable" onClick={() => go(`/invoices/${inv.id}`)}>
+                {rows.map(({ inv, client, t, outOfOrder }, i) => (
+                  <tr
+                    key={inv.id}
+                    className="clickable row-in"
+                    style={{ '--i': i } as CSSProperties}
+                    onClick={() => go(`/invoices/${inv.id}`)}
+                  >
                     <td className="mono">
                       {inv.number}
                       {outOfOrder && (

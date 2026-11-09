@@ -1,4 +1,7 @@
+import { useEffect, useState } from 'react';
+import { LatchSymbol } from '../components/Brand';
 import { InvoiceDocument } from '../components/InvoiceDocument';
+import { Portal } from '../components/Portal';
 import { Empty, TaxBadge } from '../components/ui';
 import { computeTotals } from '../lib/gst';
 import { money } from '../lib/format';
@@ -8,9 +11,24 @@ import { useStore } from '../lib/store';
 export function InvoiceView({ id }: { id: string }) {
   const { invoices, company, clientById, deleteInvoice } = useStore();
   const invoice = invoices.find((i) => i.id === id);
+  const [fresh, setFresh] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('latchbilling.justLatched') === id) {
+        sessionStorage.removeItem('latchbilling.justLatched');
+        setFresh(true);
+        const t = setTimeout(() => setFresh(false), 4200);
+        return () => clearTimeout(t);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [id]);
+
   if (!invoice) {
     return (
-      <Empty title="Invoice not found">
+      <Empty title="This invoice isn't here.">
         <a className="link" href="#/invoices">
           Back to the register
         </a>
@@ -29,6 +47,16 @@ export function InvoiceView({ id }: { id: string }) {
 
   return (
     <>
+      {fresh && (
+        <Portal>
+        <div className="toast no-print" role="status">
+          <LatchSymbol size={22} color="#B1F7BB" animate />
+          <span>
+            <strong>{invoice.number}</strong> is latched and in the register.
+          </span>
+        </div>
+        </Portal>
+      )}
       <div className="view-bar no-print">
         <a className="link" href="#/invoices">
           ← Register
@@ -37,7 +65,7 @@ export function InvoiceView({ id }: { id: string }) {
           <span className="mono strong">{invoice.number}</span>
           <TaxBadge mode={t.mode} />
           <span className="muted">
-            TDS {money(t.tds, invoice.currency)} · After TDS {money(t.receivable, invoice.currency)}
+            {client?.name} · TDS {money(t.tds, invoice.currency)} · lands {money(t.receivable, invoice.currency)}
           </span>
         </div>
         <div className="page-actions">
@@ -52,8 +80,8 @@ export function InvoiceView({ id }: { id: string }) {
           >
             Delete
           </button>
-          <button className="btn" onClick={() => go(`/invoices/new?from=${invoice.id}`)}>
-            Duplicate
+          <button className="btn" onClick={() => go(`/invoices/new?from=${invoice.id}`)} title="Same client and lines, month moved forward">
+            Repeat
           </button>
           <button className="btn" onClick={() => go(`/invoices/${invoice.id}/edit`)}>
             Edit
@@ -63,7 +91,7 @@ export function InvoiceView({ id }: { id: string }) {
           </button>
         </div>
       </div>
-      <div className="doc-stage">
+      <div className={`doc-stage${fresh ? ' doc-arrive' : ''}`}>
         <InvoiceDocument invoice={invoice} client={client} company={company} />
       </div>
     </>

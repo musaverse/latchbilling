@@ -1,71 +1,76 @@
+import { LatchSymbol, Lines } from './Brand';
 import { computeTotals, stateLabel } from '../lib/gst';
 import { longDate, plainNumber } from '../lib/format';
 import { amountInWords } from '../lib/words';
 import type { Client, Company, Invoice } from '../lib/types';
 
+export type DocFocus = 'client' | 'items' | 'totals' | 'all';
+
 interface Props {
   invoice: Invoice;
   client?: Client;
   company: Company;
+  /** In the composer, the part of the paper being worked on is lifted forward. */
+  focus?: DocFocus;
 }
 
-/** The printable tax invoice, laid out like the current Excel template. */
-export function InvoiceDocument({ invoice, client, company }: Props) {
+/** The printable tax invoice, on Latch Infinity stationery. */
+export function InvoiceDocument({ invoice, client, company, focus }: Props) {
   const t = computeTotals(invoice, company, client);
   const rate = invoice.taxRate;
   const cur = invoice.currency;
   const fmt = (n: number) => (cur === 'INR' ? `₹${plainNumber(n)}` : `${cur} ${plainNumber(n)}`);
 
   return (
-    <article className="doc">
+    <article className={`doc${focus ? ` doc-focus-${focus}` : ''}`}>
       <header className="doc-head">
         <div className="doc-from">
-          <div className="doc-logo" aria-hidden>
-            L
-          </div>
-          <h2>{company.name}</h2>
+          <div className="doc-company">{company.name}</div>
           <p>{company.address}</p>
           <p>
-            {company.email && <>email: {company.email}</>}
-            {company.website && <><br />website: {company.website}</>}
+            {[company.email, company.website].filter(Boolean).join('  ·  ')}
+            <br />
+            GSTIN <span className="mono">{company.gstin}</span>
           </p>
         </div>
-        <div className="doc-title">
-          <h1>Tax Invoice</h1>
-          <dl>
-            <dt>Invoice No.</dt>
-            <dd className="mono">{invoice.number || '—'}</dd>
-            <dt>Date</dt>
-            <dd>{longDate(invoice.date)}</dd>
-            <dt>GSTIN</dt>
-            <dd className="mono">{company.gstin}</dd>
-          </dl>
-        </div>
+        <LatchSymbol size={46} color="#111311" title="Latch Infinity" />
       </header>
 
-      <section className="doc-parties">
+      <div className="doc-titlebar">
+        <h1>Tax Invoice</h1>
+        <dl>
+          <div>
+            <dt>Invoice No.</dt>
+            <dd className="mono">{invoice.number || '—'}</dd>
+          </div>
+          <div>
+            <dt>Invoice Date</dt>
+            <dd>{longDate(invoice.date)}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <section className="doc-parties doc-zone-client">
         <div>
           <div className="doc-label">Bill To</div>
-          <strong>{client?.billingName || 'Select a client'}</strong>
-          <p>{client?.address}</p>
+          <strong>{client?.billingName || 'Your client'}</strong>
+          <p>{client?.address || 'Pick a client to fill this in.'}</p>
         </div>
         <dl>
-          <dt>Invoice Date</dt>
-          <dd>{longDate(invoice.date)}</dd>
           <dt>Customer GSTIN</dt>
-          <dd className="mono">{client?.gstin || 'Unregistered'}</dd>
+          <dd className="mono">{client ? client.gstin || 'Unregistered' : '—'}</dd>
           <dt>Place of Supply</dt>
           <dd>{client ? stateLabel(client.stateCode) : '—'}</dd>
         </dl>
       </section>
 
-      <table className="doc-items">
+      <table className="doc-items doc-zone-items">
         <thead>
           <tr>
-            <th className="num">SL No.</th>
+            <th className="num">SL</th>
             <th>Description</th>
             <th>HSN / SAC</th>
-            <th className="num">Quantity</th>
+            <th className="num">Qty</th>
             <th className="num">Rate</th>
             <th className="num">Amount</th>
           </tr>
@@ -73,8 +78,8 @@ export function InvoiceDocument({ invoice, client, company }: Props) {
         <tbody>
           {invoice.items.map((it, i) => (
             <tr key={it.id}>
-              <td className="num">{i + 1}</td>
-              <td>{it.description || <span className="muted">Description</span>}</td>
+              <td className="num">{String(i + 1).padStart(2, '0')}</td>
+              <td>{it.description || <span className="doc-ghost">Description</span>}</td>
               <td className="mono">{it.hsn}</td>
               <td className="num">{it.quantity}</td>
               <td className="num">{plainNumber(it.rate)}</td>
@@ -84,13 +89,11 @@ export function InvoiceDocument({ invoice, client, company }: Props) {
         </tbody>
       </table>
 
-      <section className="doc-summary">
+      <section className="doc-summary doc-zone-totals">
         <div className="doc-thanks">
           <p>{company.footerNote}</p>
           {invoice.notes && <p className="doc-notes">{invoice.notes}</p>}
-          {t.mode === 'export' && (
-            <p className="doc-notes">Supply meant for export under LUT without payment of IGST.</p>
-          )}
+          {t.mode === 'export' && <p className="doc-notes">Supply meant for export under LUT without payment of IGST.</p>}
         </div>
         <dl className="doc-totals">
           <dt>Subtotal</dt>
@@ -119,7 +122,7 @@ export function InvoiceDocument({ invoice, client, company }: Props) {
           <dd className="grand">{fmt(t.total)}</dd>
         </dl>
       </section>
-      <p className="doc-words">
+      <p className="doc-words doc-zone-totals">
         <span className="doc-label">Amount in words</span>
         {amountInWords(t.total, cur)}
       </p>
@@ -128,20 +131,20 @@ export function InvoiceDocument({ invoice, client, company }: Props) {
         <div>
           <div className="doc-label">Payment Details</div>
           <dl className="doc-bank">
-            <dt>Name of the Bank</dt>
+            <dt>Bank</dt>
             <dd>{company.bank.bankName}</dd>
-            <dt>Branch Address</dt>
+            <dt>Branch</dt>
             <dd>{company.bank.branch}</dd>
-            <dt>Account Number</dt>
+            <dt>Account No.</dt>
             <dd className="mono">{company.bank.accountNumber}</dd>
             <dt>Account Type</dt>
             <dd>{company.bank.accountType}</dd>
-            <dt>Name of the Account</dt>
+            <dt>Account Name</dt>
             <dd>{company.bank.accountName}</dd>
-            <dt>Swift Code</dt>
-            <dd className="mono">{company.bank.swift}</dd>
-            <dt>IFSC Code</dt>
+            <dt>IFSC</dt>
             <dd className="mono">{company.bank.ifsc}</dd>
+            <dt>SWIFT</dt>
+            <dd className="mono">{company.bank.swift}</dd>
           </dl>
         </div>
         <div className="doc-sign">
@@ -149,6 +152,11 @@ export function InvoiceDocument({ invoice, client, company }: Props) {
           <div className="doc-sign-line">{company.signatory}</div>
         </div>
       </footer>
+
+      <div className="doc-band" aria-hidden>
+        <Lines width={794} height={70} count={3} stroke={5} at={0.12} />
+        <span>{company.website}</span>
+      </div>
     </article>
   );
 }

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 export type Route =
   | { page: 'dashboard' }
   | { page: 'invoices' }
-  | { page: 'invoice-new'; from?: string }
+  | { page: 'invoice-new'; from?: string; client?: string }
   | { page: 'invoice'; id: string }
   | { page: 'invoice-edit'; id: string }
   | { page: 'clients' }
@@ -14,7 +14,7 @@ function parse(hash: string): Route {
   const parts = path.split('/').filter(Boolean);
   const params = new URLSearchParams(query);
   if (parts[0] === 'invoices') {
-    if (parts[1] === 'new') return { page: 'invoice-new', from: params.get('from') ?? undefined };
+    if (parts[1] === 'new') return { page: 'invoice-new', from: params.get('from') ?? undefined, client: params.get('client') ?? undefined };
     if (parts[1] && parts[2] === 'edit') return { page: 'invoice-edit', id: parts[1] };
     if (parts[1]) return { page: 'invoice', id: parts[1] };
     return { page: 'invoices' };

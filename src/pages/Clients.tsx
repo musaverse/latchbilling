@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { ClientForm } from '../components/ClientForm';
 import { Modal } from '../components/Modal';
 import { Empty, PageHeader, TaxBadge } from '../components/ui';
 import { computeTotals, stateLabel, taxMode } from '../lib/gst';
 import { money } from '../lib/format';
+import { go } from '../lib/router';
 import { useStore } from '../lib/store';
 import type { Client } from '../lib/types';
 
@@ -19,8 +20,9 @@ export function Clients() {
   return (
     <>
       <PageHeader
-        title="Clients"
-        subtitle="Saved once, reused on every invoice. The client's state decides whether GST is CGST + SGST or IGST."
+        intro="Clients"
+        title="Saved once. Billed forever."
+        subtitle="The client's state decides whether GST is CGST + SGST or IGST."
         actions={
           <button className="btn btn-primary" onClick={() => setEditing('new')}>
             New client
@@ -35,9 +37,10 @@ export function Clients() {
           {clients.map((c) => {
             const count = invoices.filter((i) => i.clientId === c.id).length;
             return (
-              <article className="card client" key={c.id}>
+              <article className="card client" key={c.id} style={{ '--i': clients.indexOf(c) } as CSSProperties}>
                 <div className="client-head">
-                  <div>
+                  <span className="feed-mark">{c.name.slice(0, 2).toUpperCase()}</span>
+                  <div className="client-names">
                     <h2>{c.name}</h2>
                     {c.billingName !== c.name && <div className="muted">{c.billingName}</div>}
                   </div>
@@ -55,6 +58,9 @@ export function Clients() {
                   </dd>
                 </dl>
                 <div className="client-actions">
+                  <button className="btn btn-ghost" onClick={() => go(`/invoices/new?client=${c.id}`)}>
+                    Bill {c.name}
+                  </button>
                   <button className="btn btn-ghost" onClick={() => setEditing(c)}>
                     Edit
                   </button>

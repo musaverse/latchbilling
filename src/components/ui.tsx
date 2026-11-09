@@ -1,12 +1,24 @@
+import { Nest } from './Brand';
 import type { ReactNode } from 'react';
 import type { TaxMode } from '../lib/gst';
 import { TAX_MODE_LABEL } from '../lib/gst';
 
-export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
+export function PageHeader({
+  intro,
+  title,
+  subtitle,
+  actions,
+}: {
+  intro?: string;
+  title: string;
+  subtitle?: ReactNode;
+  actions?: ReactNode;
+}) {
   return (
     <div className="page-head">
       <div>
-        <h1>{title}</h1>
+        {intro && <p className="intro-text">{intro}</p>}
+        <h1 className="display">{title}</h1>
         {subtitle && <p className="page-sub">{subtitle}</p>}
       </div>
       {actions && <div className="page-actions">{actions}</div>}
@@ -41,6 +53,7 @@ export function Field({ label, hint, children, wide }: { label: string; hint?: R
 export function Empty({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <div className="empty">
+      <Nest size={110} />
       <strong>{title}</strong>
       {children}
     </div>

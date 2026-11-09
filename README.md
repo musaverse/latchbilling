@@ -4,7 +4,7 @@ GST invoicing and invoice register for Latch Infinity Private Limited. It replac
 
 | Today (Excel) | In Latch Billing |
 | --- | --- |
-| One workbook per invoice (e.g. `KIS_Fridge_Magnets_B.xlsx`) | **New invoice**: pick a client, add line items, download a PDF |
+| One workbook per invoice (e.g. `KIS_Fridge_Magnets_B.xlsx`) | **New invoice**: a four-step flow, then download a PDF |
 | Monthly register (e.g. `LI_Nov_2026.xlsx`) | **Invoices**: filled in automatically, filter by month, **Export to Excel** in the same columns |
 | Client address and GSTIN retyped each time | **Clients**: saved once |
 | Company and bank details in the template | **Settings** |
@@ -23,6 +23,24 @@ Then open the URL Vite prints (usually http://localhost:5173).
 ```bash
 npm run build   # type-check and build to dist/
 ```
+
+## Design
+
+The interface follows the Latch Infinity Brand Lookbook (Edition 01, 2026):
+
+- **Colour:** Deep `#333A32` and Mint `#B1F7BB` are the brand. Ice and Lilac are used only as expressions (IGST and export badges).
+- **Type:** Archivo Wide for headlines, set regular and never bold, with small grey intros above them.
+- **Graphics:** the symbol, the lines, the climb and the nest are drawn in code (`src/components/Brand.tsx`). Every device uses one stroke weight and the 57° latch angle.
+
+**Motion:**
+
+- **Intro:** replays the latch film once per session. A line enters, turns at 57°, threads through the symbol and leaves.
+- **New invoice:** four steps (Client → Work → Tax → Latch) beside a live preview of the paper that highlights the part being filled in.
+  - **Repeat chips:** bring back a client's earlier invoice with the months moved forward.
+  - **Tax step:** draws the route between the two states to show why the invoice gets CGST + SGST or IGST.
+  - **Saving:** you press and hold to latch the invoice.
+- **Ask Latch** (`⌘K` / `Ctrl K` / `/`): search invoices and clients, or jump anywhere. `N` starts a new invoice.
+- **Reduced motion:** all animation respects the system's *reduce motion* setting.
 
 ## Business rules
 
