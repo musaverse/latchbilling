@@ -19,6 +19,27 @@ const NAV: { href: string; label: string; match: Route['page'][]; icon: string }
   { href: '#/settings', label: 'Settings', match: ['settings'], icon: 'M4 7h10M18 7h2M4 17h2M10 17h10M16 4v6M8 14v6' },
 ];
 
+const TITLES: Record<Route['page'], string> = {
+  dashboard: 'Overview',
+  invoices: 'Invoices',
+  invoice: 'Invoice',
+  'invoice-new': 'New invoice',
+  'invoice-edit': 'Edit invoice',
+  clients: 'Clients',
+  settings: 'Settings',
+};
+
+/** Phone tabs. The raised centre button starts a new invoice. */
+const TABS: { href: string; label: string; match: Route['page'][]; icon: string }[] = [
+  NAV[0],
+  NAV[1],
+  NAV[3],
+  NAV[4],
+];
+
+/** Screens that take over the phone: they get a back button and their own bottom action bar instead of tabs. */
+const DETAIL: Route['page'][] = ['invoice', 'invoice-new', 'invoice-edit'];
+
 function Page({ route }: { route: Route }) {
   switch (route.page) {
     case 'invoices':
@@ -75,10 +96,34 @@ export function App() {
   }, []);
 
   const routeKey = route.page + ('id' in route ? route.id : '');
+  const detail = DETAIL.includes(route.page);
+  const back = () => (history.length > 1 ? history.back() : go(route.page === 'invoice' ? '/invoices' : '/'));
 
   return (
-    <div className="shell">
+    <div className={`shell${detail ? ' shell-detail' : ''}`}>
       <Intro />
+      <header className="topbar no-print">
+        {detail ? (
+          <button className="topbar-btn" onClick={back} aria-label="Back">
+            <svg viewBox="0 0 24 24" aria-hidden>
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </button>
+        ) : (
+          <a href="#/" className="topbar-mark" aria-label="Overview">
+            <LatchSymbol size={26} color="#B1F7BB" />
+          </a>
+        )}
+        <span className="topbar-title" key={route.page}>
+          {TITLES[route.page]}
+        </span>
+        <button className="topbar-btn" onClick={() => setAskOpen(true)} aria-label="Ask Latch">
+          <svg viewBox="0 0 24 24" aria-hidden>
+            <circle cx="11" cy="11" r="6.5" />
+            <path d="M16 16l4 4" />
+          </svg>
+        </button>
+      </header>
       <aside className="sidebar no-print">
         <a className="brand" href="#/">
           <LatchSymbol size={30} color="#B1F7BB" className="brand-symbol" />
@@ -121,6 +166,32 @@ export function App() {
           <Page route={route} />
         </div>
       </main>
+
+      {!detail && (
+        <nav className="tabbar no-print" aria-label="Sections">
+          {TABS.slice(0, 2).map((t) => (
+            <a key={t.href} href={t.href} className={t.match.includes(route.page) ? 'on' : ''}>
+              <svg viewBox="0 0 24 24" aria-hidden>
+                <path d={t.icon} />
+              </svg>
+              <span>{t.label}</span>
+            </a>
+          ))}
+          <a href="#/invoices/new" className="tab-new" aria-label="New invoice">
+            <svg viewBox="0 0 24 24" aria-hidden>
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </a>
+          {TABS.slice(2).map((t) => (
+            <a key={t.href} href={t.href} className={t.match.includes(route.page) ? 'on' : ''}>
+              <svg viewBox="0 0 24 24" aria-hidden>
+                <path d={t.icon} />
+              </svg>
+              <span>{t.label}</span>
+            </a>
+          ))}
+        </nav>
+      )}
 
       <CommandBar open={askOpen} onClose={() => setAskOpen(false)} />
     </div>

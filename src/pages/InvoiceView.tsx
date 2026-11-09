@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { LatchSymbol } from '../components/Brand';
+import { FitPaper } from '../components/FitPaper';
 import { InvoiceDocument } from '../components/InvoiceDocument';
 import { Portal } from '../components/Portal';
 import { Empty, TaxBadge } from '../components/ui';
@@ -62,6 +63,7 @@ export function InvoiceView({ id }: { id: string }) {
           ← Register
         </a>
         <div className="view-meta">
+          <span className="view-amount">{money(t.total, invoice.currency)}</span>
           <span className="mono strong">{invoice.number}</span>
           <TaxBadge mode={t.mode} />
           <span className="muted">
@@ -87,12 +89,14 @@ export function InvoiceView({ id }: { id: string }) {
             Edit
           </button>
           <button className="btn btn-primary" onClick={print}>
-            Download PDF
+            <span className="only-wide">Download </span>PDF
           </button>
         </div>
       </div>
       <div className={`doc-stage${fresh ? ' doc-arrive' : ''}`}>
-        <InvoiceDocument invoice={invoice} client={client} company={company} />
+        <FitPaper>
+          <InvoiceDocument invoice={invoice} client={client} company={company} />
+        </FitPaper>
       </div>
     </>
   );

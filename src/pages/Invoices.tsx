@@ -69,7 +69,59 @@ export function Invoices() {
         />
       </div>
 
-      <section className="card card-flush">
+      {rows.length > 0 && (
+        <section className="reg-mobile" aria-label="Invoices">
+          <div className="reg-sum">
+            <div>
+              <small>Invoiced</small>
+              <strong>{money(total('total'))}</strong>
+            </div>
+            <div>
+              <small>GST</small>
+              <span>{money(total('tax'))}</span>
+            </div>
+            <div>
+              <small>After TDS</small>
+              <span>{money(total('receivable'))}</span>
+            </div>
+          </div>
+          <ul className="reg-cards">
+            {rows.map(({ inv, client, t, outOfOrder }, i) => (
+              <li key={inv.id} style={{ '--i': i } as CSSProperties}>
+                <button className="reg-card" onClick={() => go(`/invoices/${inv.id}`)}>
+                  <span className="reg-top">
+                    <span className="mono">
+                      {inv.number}
+                      {outOfOrder && (
+                        <span className="flag" title="Out of date order">
+                          !
+                        </span>
+                      )}
+                    </span>
+                    <TaxBadge mode={t.mode} />
+                  </span>
+                  <span className="reg-mid">
+                    <span className="reg-names">
+                      <strong>{inv.title}</strong>
+                      <span>
+                        {client?.name ?? '—'} · {shortDate(inv.date)}
+                      </span>
+                    </span>
+                    <span className="reg-amount">{money(t.total, inv.currency)}</span>
+                  </span>
+                  <span className="reg-foot">
+                    <span>GST {money(t.tax, inv.currency)}</span>
+                    <span>TDS {money(t.tds, inv.currency)}</span>
+                    <span>Lands {money(t.receivable, inv.currency)}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="card card-flush reg-table">
         {rows.length === 0 ? (
           <Empty title="Nothing latched here yet." />
         ) : (

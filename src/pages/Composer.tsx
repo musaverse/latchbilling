@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
 import { LatchSymbol, Nest } from '../components/Brand';
 import { ClientForm } from '../components/ClientForm';
+import { FitPaper } from '../components/FitPaper';
 import { InvoiceDocument, type DocFocus } from '../components/InvoiceDocument';
 import { Modal } from '../components/Modal';
 import { Portal } from '../components/Portal';
@@ -27,6 +28,15 @@ const STAGES: { key: DocFocus; label: string; intro: string; title: string }[] =
   { key: 'totals', label: 'Tax', intro: 'Step three', title: 'The tax works itself out.' },
   { key: 'all', label: 'Latch', intro: 'Last step', title: 'Ready to latch.' },
 ];
+
+/** A short buzz on phones that support it, when something latches into place. */
+const haptic = (pattern: number | number[] = 12) => {
+  try {
+    navigator.vibrate?.(pattern);
+  } catch {
+    /* not supported */
+  }
+};
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const MONTH_RE = /\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:t|tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(\d{4})\b/g;
@@ -86,6 +96,7 @@ export function Composer({ id, from, clientId }: Props) {
   const [tried, setTried] = useState<boolean[]>([false, false, false, false]);
   const [addingClient, setAddingClient] = useState(false);
   const [latching, setLatching] = useState<string | null>(null);
+  const [peek, setPeek] = useState(false);
 
   const others = invoices.filter((i) => i.id !== draft.id);
   const keepNumber = existing && fyCode(existing.date) === fyCode(draft.date);
@@ -129,6 +140,7 @@ export function Composer({ id, from, clientId }: Props) {
     } catch {
       /* ignore */
     }
+    haptic([18, 60, 30]);
     setLatching(number);
     setTimeout(() => go(`/invoices/${draft.id}`), 2100);
   };
@@ -147,6 +159,18 @@ export function Composer({ id, from, clientId }: Props) {
     <div className="composer">
       <div className="composer-left">
         <StageRail stage={stage} reachable={reachable} onPick={goTo} />
+        <button className="peek-btn" onClick={() => setPeek(true)} aria-label="Preview the invoice paper">
+          <span className="peek-thumb" aria-hidden>
+            <span />
+            <span />
+            <span />
+          </span>
+          <span>
+            <small>Live paper</small>
+            <span className="mono">{number}</span>
+          </span>
+          <strong>{money(totals.total, draft.currency)}</strong>
+        </button>
 
         <div className="stage" key={stage} data-dir={dir} onKeyDown={onKeyDown}>
           <p className="intro-text">{s.intro}</p>
@@ -158,6 +182,7 @@ export function Composer({ id, from, clientId }: Props) {
               invoices={invoices}
               selected={draft.clientId}
               onPick={(cid) => {
+                haptic();
                 set({ clientId: cid });
                 setDir(1);
                 setTimeout(() => setStage(1), 380);
@@ -229,10 +254,32 @@ export function Composer({ id, from, clientId }: Props) {
           <span className="intro-text">Live paper</span>
           <span className="mono preview-number">{number}</span>
         </div>
-        <div className="preview-scale">
+        <FitPaper>
           <InvoiceDocument invoice={preview} client={client} company={company} focus={s.key} />
-        </div>
+        </FitPaper>
       </aside>
+
+      {peek && (
+        <Portal>
+          <div className="sheet-backdrop" onClick={() => setPeek(false)}>
+            <div className="sheet" role="dialog" aria-modal="true" aria-label="Invoice preview" onClick={(e) => e.stopPropagation()}>
+              <div className="sheet-grip" aria-hidden />
+              <div className="sheet-head">
+                <span>
+                  <small className="intro-text">Live paper</small>
+                  <span className="mono">{number}</span>
+                </span>
+                <button className="btn" onClick={() => setPeek(false)}>
+                  Done
+                </button>
+              </div>
+              <FitPaper>
+                <InvoiceDocument invoice={preview} client={client} company={company} />
+              </FitPaper>
+            </div>
+          </div>
+        </Portal>
+      )}
 
       {addingClient && (
         <Modal title="New client" onClose={() => setAddingClient(false)}>
@@ -452,32 +499,51 @@ function WorkStage({
           const badQty = tried && !(it.quantity > 0);
           return (
             <div className="items-row" key={it.id} style={{ '--i': idx } as CSSProperties}>
-              <input
-                className={`input${badDesc ? ' invalid' : ''}`}
-                placeholder="What was delivered"
-                value={it.description}
-                onChange={(e) => setItem(it.id, { description: e.target.value })}
-                aria-label="Description"
-              />
-              <input className="input mono" value={it.hsn} onChange={(e) => setItem(it.id, { hsn: e.target.value })} aria-label="HSN or SAC" />
-              <input
-                className={`input num${badQty ? ' invalid' : ''}`}
-                type="number"
-                min={0}
-                step="any"
-                value={it.quantity}
-                onChange={(e) => setItem(it.id, { quantity: Number(e.target.value) })}
-                aria-label="Quantity"
-              />
-              <input
-                className="input num"
-                type="number"
-                min={0}
-                step="any"
-                value={it.rate}
-                onChange={(e) => setItem(it.id, { rate: Number(e.target.value) })}
-                aria-label="Rate"
-              />
+              <span className="items-index" aria-hidden>
+                Line {String(idx + 1).padStart(2, '0')}
+              </span>
+              <label className="cell cell-desc" data-label="Description">
+                <input
+                  className={`input${badDesc ? ' invalid' : ''}`}
+                  placeholder="What was delivered"
+                  value={it.description}
+                  onChange={(e) => setItem(it.id, { description: e.target.value })}
+                  aria-label="Description"
+                />
+              </label>
+              <label className="cell" data-label="HSN / SAC">
+                <input
+                  className="input mono"
+                  inputMode="numeric"
+                  value={it.hsn}
+                  onChange={(e) => setItem(it.id, { hsn: e.target.value })}
+                  aria-label="HSN or SAC"
+                />
+              </label>
+              <label className="cell" data-label="Qty">
+                <input
+                  className={`input num${badQty ? ' invalid' : ''}`}
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="any"
+                  value={it.quantity}
+                  onChange={(e) => setItem(it.id, { quantity: Number(e.target.value) })}
+                  aria-label="Quantity"
+                />
+              </label>
+              <label className="cell" data-label="Rate">
+                <input
+                  className="input num"
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="any"
+                  value={it.rate}
+                  onChange={(e) => setItem(it.id, { rate: Number(e.target.value) })}
+                  aria-label="Rate"
+                />
+              </label>
               <span className="num items-amount">{money((it.quantity || 0) * (it.rate || 0), draft.currency)}</span>
               <button
                 className="btn btn-ghost icon"
@@ -520,14 +586,16 @@ function TaxRoute({ mode, from, to, toName }: { mode: TaxMode; from: string; to:
         <circle className="route-node" cx="40" cy={mode === 'intra' ? 80 : 104} r="9" />
         {mode !== 'export' && <circle className="route-node end" cx="480" cy={endY} r="9" />}
       </svg>
-      <span className="route-from" style={{ top: mode === 'intra' ? 96 : 120 }}>
-        {from}
-        <small>You</small>
-      </span>
-      <span className="route-to" style={{ top: mode === 'intra' ? 96 : 38 }}>
-        {to}
-        <small>{toName}</small>
-      </span>
+      <div className="route-labels">
+        <span className="route-from">
+          {from}
+          <small>You</small>
+        </span>
+        <span className="route-to">
+          {to}
+          <small>{toName}</small>
+        </span>
+      </div>
     </div>
   );
 }
