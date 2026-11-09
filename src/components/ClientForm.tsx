@@ -36,7 +36,7 @@ export function ClientForm({ initial, onSave, onCancel }: Props) {
       }}
     >
       <div className="grid-2">
-        <Field label="Short name" hint="Used in the register, e.g. KIS">
+        <Field label="Short name" hint="Used in the register, e.g. Hillcrest">
           <input
             className={`input${tried && errors.name ? ' invalid' : ''}`}
             value={c.name}

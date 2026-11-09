@@ -11,6 +11,8 @@ GST invoicing and invoice register for Latch Infinity Private Limited. It replac
 
 > **Status: front-end prototype.** Data is saved in the browser (localStorage) and starts with the Nov 2026 sample invoices. A database comes next. Swapping `src/lib/store.tsx` for API calls is the only change the pages need.
 
+**Live demo:** https://musaverse.github.io/latchbilling/ (redeployed on every push to `main`). The demo uses fictional clients and placeholder bank details. Each person's changes stay in their own browser.
+
 ## Run it
 
 ```bash
@@ -54,7 +56,7 @@ The interface follows the Latch Infinity Brand Lookbook (Edition 01, 2026):
   - **Foreign currency or client outside India**: zero-rated export under LUT.
 - **TDS** defaults to 10% of the taxable value (excluding GST).
   - **After TDS** = invoice amount − TDS, which is what the client actually transfers.
-  - Example: KIS ₹23,000 + ₹4,140 IGST = ₹27,140 − ₹2,300 TDS = ₹24,840.
+  - Example: ₹23,000 + ₹4,140 IGST = ₹27,140 − ₹2,300 TDS = ₹24,840.
 - **Amount in words** uses the Indian system (lakh, crore), e.g. "Rupees Twenty-Seven Thousand One Hundred and Forty Only."
 - **Date order**: GST expects invoice numbers to follow invoice dates. The editor warns about out-of-order numbers and the register flags them with **!**.
 

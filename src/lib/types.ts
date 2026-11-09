@@ -33,7 +33,7 @@ export interface Company {
 
 export interface Client {
   id: string;
-  /** Short name used in the register, e.g. "KIS". */
+  /** Short name used in the register, e.g. "Hillcrest". */
   name: string;
   /** Full legal name printed on the invoice. */
   billingName: string;

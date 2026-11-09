@@ -15,46 +15,50 @@ export const DEFAULT_COMPANY: Company = {
   defaultTdsRate: 10,
   defaultHsn: '998361',
   footerNote: 'Thank you for your business!',
+  // Placeholder bank details for the shared demo. Enter the real ones in Settings.
   bank: {
-    bankName: 'State Bank of India',
-    branch: 'Radiant Shine Commercial, Building S No 53 3 Yelanahalli, Begur, Bangalore - 560068',
-    accountNumber: '00000044155947388',
+    bankName: 'Sample Bank (demo)',
+    branch: 'Demo branch, Bengaluru - 560001',
+    accountNumber: '000000000000',
     accountType: 'Current',
     accountName: 'Latch Infinity Private Limited',
-    swift: 'SBININBB230',
-    ifsc: 'SBIN0018916',
+    swift: 'DEMOINBB000',
+    ifsc: 'DEMO0000000',
   },
 };
 
-/** Sample data taken from LI_Nov_2026.xlsx and KIS_Fridge_Magnets_B.xlsx. */
+/**
+ * Demo data shaped like the Nov 2026 register, with fictional clients
+ * so the app can be shared publicly. Real clients are added in Clients.
+ */
 export function seedData(): AppData {
   return {
     company: DEFAULT_COMPANY,
     clients: [
       {
         id: 'c-sherwood',
-        name: 'Sherwood High',
-        billingName: 'Sherwood High',
-        address: 'Address to be added',
+        name: 'Riverside High',
+        billingName: 'Riverside High School (demo client)',
+        address: '12 Lake View Road, Bengaluru, Karnataka, 560001',
         gstin: '',
         stateCode: '29',
         email: '',
       },
       {
         id: 'c-kis',
-        name: 'KIS',
-        billingName: 'Kodaikanal International School',
-        address: 'P.B. No. 25, Seven Roads Junction, Kodaikanal, Dindigul District, Tamil Nadu, 624101, India',
-        gstin: '33AABCK4259M1ZC',
+        name: 'Hillcrest',
+        billingName: 'Hillcrest International School (demo client)',
+        address: '7 Hill Road, Ooty, The Nilgiris, Tamil Nadu, 643001, India',
+        gstin: '33AAACH1234A1Z5',
         stateCode: '33',
         email: '',
       },
       {
         id: 'c-zari',
-        name: 'Zari',
-        billingName: 'Zari',
-        address: 'Address to be added',
-        gstin: '29AACCZ7922P1ZF',
+        name: 'Monsoon',
+        billingName: 'Monsoon Retail Pvt Ltd (demo client)',
+        address: '45 Brigade Road, Bengaluru, Karnataka, 560025',
+        gstin: '29AAACM5678B1Z2',
         stateCode: '29',
         email: '',
       },
@@ -94,9 +98,9 @@ export function seedData(): AppData {
         number: '2627INLI00037',
         date: '2026-11-05',
         clientId: 'c-zari',
-        title: 'Ad Operation for November 2026',
+        title: 'Ad Operations - Nov 2026',
         currency: 'INR',
-        items: [{ id: 'l-37-1', description: 'Ad Operation for November 2026', hsn: '998361', quantity: 1, rate: 100000 }],
+        items: [{ id: 'l-37-1', description: 'Ad Operations - Nov 2026', hsn: '998361', quantity: 1, rate: 100000 }],
         taxRate: 18,
         tdsRate: 10,
         notes: '',
