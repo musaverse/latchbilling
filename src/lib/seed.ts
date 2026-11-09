@@ -1,0 +1,107 @@
+import type { AppData, Company } from './types';
+
+export const DEFAULT_COMPANY: Company = {
+  name: 'Latch Infinity Private Limited',
+  address:
+    '4th Floor, UNIT 1, B BLOCK, Uma Sree Dream World Apt, Garvebhavipalya, Kudlu Gate, Bengaluru Urban, Karnataka, 560068',
+  email: 'info@latchinfinity.com',
+  website: 'www.latchinfinity.com',
+  gstin: '29AAFCL7230F1ZI',
+  stateCode: '29',
+  signatory: 'Authorised Signatory',
+  numberPrefix: 'INLI',
+  numberDigits: 5,
+  defaultTaxRate: 18,
+  defaultTdsRate: 10,
+  defaultHsn: '998361',
+  footerNote: 'Thank you for your business!',
+  bank: {
+    bankName: 'State Bank of India',
+    branch: 'Radiant Shine Commercial, Building S No 53 3 Yelanahalli, Begur, Bangalore - 560068',
+    accountNumber: '00000044155947388',
+    accountType: 'Current',
+    accountName: 'Latch Infinity Private Limited',
+    swift: 'SBININBB230',
+    ifsc: 'SBIN0018916',
+  },
+};
+
+/** Sample data taken from LI_Nov_2026.xlsx and KIS_Fridge_Magnets_B.xlsx. */
+export function seedData(): AppData {
+  return {
+    company: DEFAULT_COMPANY,
+    clients: [
+      {
+        id: 'c-sherwood',
+        name: 'Sherwood High',
+        billingName: 'Sherwood High',
+        address: 'Address to be added',
+        gstin: '',
+        stateCode: '29',
+        email: '',
+      },
+      {
+        id: 'c-kis',
+        name: 'KIS',
+        billingName: 'Kodaikanal International School',
+        address: 'P.B. No. 25, Seven Roads Junction, Kodaikanal, Dindigul District, Tamil Nadu, 624101, India',
+        gstin: '33AABCK4259M1ZC',
+        stateCode: '33',
+        email: '',
+      },
+      {
+        id: 'c-zari',
+        name: 'Zari',
+        billingName: 'Zari',
+        address: 'Address to be added',
+        gstin: '29AACCZ7922P1ZF',
+        stateCode: '29',
+        email: '',
+      },
+    ],
+    invoices: [
+      {
+        id: 'i-35',
+        seq: 35,
+        number: '2627INLI00035',
+        date: '2026-11-01',
+        clientId: 'c-sherwood',
+        title: 'Digital Marketing Service - Oct 2026',
+        currency: 'INR',
+        items: [{ id: 'l-35-1', description: 'Digital Marketing Service - Oct 2026', hsn: '998361', quantity: 1, rate: 50000 }],
+        taxRate: 18,
+        tdsRate: 10,
+        notes: '',
+        createdAt: '2026-11-01T10:00:00.000Z',
+      },
+      {
+        id: 'i-36',
+        seq: 36,
+        number: '2627INLI00036',
+        date: '2026-11-07',
+        clientId: 'c-kis',
+        title: 'Fridge Magnets B',
+        currency: 'INR',
+        items: [{ id: 'l-36-1', description: 'Fridge Magnets', hsn: '998361', quantity: 100, rate: 230 }],
+        taxRate: 18,
+        tdsRate: 10,
+        notes: '',
+        createdAt: '2026-11-07T10:00:00.000Z',
+      },
+      {
+        id: 'i-37',
+        seq: 37,
+        number: '2627INLI00037',
+        date: '2026-11-05',
+        clientId: 'c-zari',
+        title: 'Ad Operation for November 2026',
+        currency: 'INR',
+        items: [{ id: 'l-37-1', description: 'Ad Operation for November 2026', hsn: '998361', quantity: 1, rate: 100000 }],
+        taxRate: 18,
+        tdsRate: 10,
+        notes: '',
+        createdAt: '2026-11-05T10:00:00.000Z',
+      },
+    ],
+  };
+}
