@@ -13,6 +13,10 @@ export const LILAC = ['#37323F', '#D8CCFF'] as const;
 const TAN57 = Math.tan((57 * Math.PI) / 180);
 const COS57 = Math.cos((57 * Math.PI) / 180);
 const SIN57 = Math.sin((57 * Math.PI) / 180);
+/** Corner tangent length per unit radius for a 57° turn. */
+const HALF57 = Math.tan((28.5 * Math.PI) / 180);
+/** Horizontal shift that keeps a parallel copy one unit away on the 57° diagonal as well as on the flats. */
+const SHIFT57 = (1 - COS57) / SIN57;
 
 function hex(c: string): [number, number, number] {
   const n = parseInt(c.slice(1), 16);
@@ -101,20 +105,29 @@ export function Climb({ width = 800, height = 300, colors = [DEEP, MINT], bands 
   const step = height / (bands + 6);
   const yHigh = step;
   const yLow = height * 0.55;
-  const r = step * 2.2;
   const fills = ramp(colors[0], colors[1], bands);
   const x0 = width * at;
   const dx = (yLow - yHigh) / TAN57;
+  // Lower corner: later bands sit outside it, so their radius grows.
+  // Upper corner: later bands sit inside it, so their radius shrinks.
+  const rLow = step * 1.5;
+  const rHigh = step * (bands + 1.5);
 
   const band = (i: number) => {
-    const lo = yLow + i * step;
-    const hi = yHigh + i * step;
-    const xs = x0 + i * step * 0.35;
+    const d = i * step;
+    const lo = yLow + d;
+    const hi = yHigh + d;
+    const xs = x0 + d * SHIFT57;
+    const xh = xs + dx;
+    const r1 = rLow + d;
+    const r2 = rHigh - d;
+    const t1 = r1 * HALF57;
+    const t2 = r2 * HALF57;
     return [
-      `M0 ${height}V${lo}H${xs - r}`,
-      `Q${xs} ${lo} ${xs + r * COS57} ${lo - r * SIN57}`,
-      `L${xs + dx - r * COS57} ${hi + r * SIN57}`,
-      `Q${xs + dx} ${hi} ${xs + dx + r} ${hi}`,
+      `M0 ${height}V${lo}H${xs - t1}`,
+      `A${r1} ${r1} 0 0 0 ${xs + t1 * COS57} ${lo - t1 * SIN57}`,
+      `L${xh - t2 * COS57} ${hi + t2 * SIN57}`,
+      `A${r2} ${r2} 0 0 1 ${xh + t2} ${hi}`,
       `H${width}V${height}Z`,
     ].join('');
   };
@@ -147,24 +160,33 @@ interface LinesProps {
 }
 
 export function Lines({ width = 800, height = 300, count = 5, stroke = 14, colors = DEEP, at = 0.3, className, animate }: LinesProps) {
+  // Equal spacing, always: the gap between strokes equals the stroke, on the flats and on the 57° drop.
   const gap = stroke * 2;
   const total = gap * (count - 1);
   const top = (height - total) * 0.18;
   const bottom = height - (height - total) * 0.18 - total;
   const drop = bottom - top;
   const dx = drop / TAN57;
-  const r = stroke * 2.4;
+  // Upper corner: later lines sit inside it. Lower corner: later lines sit outside it.
+  const rTop = stroke * 1.5 + total;
+  const rBottom = stroke * 1.5;
   const palette = typeof colors === 'string' ? Array(count).fill(colors) : ramp(colors[0], colors[1], count);
 
   const line = (i: number) => {
-    const y1 = top + i * gap;
+    const d = i * gap;
+    const y1 = top + d;
     const y2 = y1 + drop;
-    const xs = width * at + i * gap * 0.32;
+    const xs = width * at - d * SHIFT57;
+    const xb = xs + dx;
+    const r1 = rTop - d;
+    const r2 = rBottom + d;
+    const t1 = r1 * HALF57;
+    const t2 = r2 * HALF57;
     return [
-      `M-10 ${y1}H${xs - r}`,
-      `Q${xs} ${y1} ${xs + r * COS57} ${y1 + r * SIN57}`,
-      `L${xs + dx - r * COS57} ${y2 - r * SIN57}`,
-      `Q${xs + dx} ${y2} ${xs + dx + r} ${y2}`,
+      `M-10 ${y1}H${xs - t1}`,
+      `A${r1} ${r1} 0 0 1 ${xs + t1 * COS57} ${y1 + t1 * SIN57}`,
+      `L${xb - t2 * COS57} ${y2 - t2 * SIN57}`,
+      `A${r2} ${r2} 0 0 0 ${xb + t2} ${y2}`,
       `H${width + 10}`,
     ].join('');
   };
